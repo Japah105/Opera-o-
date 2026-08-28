@@ -198,208 +198,141 @@ HTML = f"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Flash Passageiros QH — {SEMANA} {DIA_FMT}</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<title>Flash Passageiros — {DIA_FMT}</title>
 <style>
-:root{{
-  --bg:#071420;--s0:#0C1D2E;--s1:#122540;--s2:#1A3252;--s3:#213D64;
-  --ok:#18C46A;--ok-d:#071A0E;--warn:#F5A623;--warn-d:#1C1000;
-  --crit:#E04B4B;--crit-d:#1A0606;--neu:#4A9CC9;--neu-d:#071422;
-  --t1:#E4EDF8;--t2:#7BA8CA;--t3:#436485;--bdr:#182E45;--acc:#7B61FF;
-  --r:10px;
-}}
 *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
-body{{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:14px;line-height:1.5}}
-.hdr{{background:var(--s0);border-bottom:2px solid var(--acc);position:sticky;top:0;z-index:200}}
-.hdr-inner{{display:flex;align-items:center;gap:8px;padding:0 16px;height:52px;flex-wrap:nowrap}}
-.brand{{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;color:#fff;white-space:nowrap}}
-.brand b{{color:var(--acc)}}
-.flash-tag{{background:rgba(123,97,255,.15);color:var(--acc);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}}
-.hdr-dt{{margin-left:auto;font-size:11px;color:var(--t3);white-space:nowrap}}
-.pdf-btn{{background:var(--acc);border:none;color:#fff;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif}}
-.pdf-btn:hover{{opacity:.85}}
-.bc{{display:flex;align-items:center;padding:5px 16px;font-size:12px;border-bottom:1px solid var(--bdr);white-space:nowrap;overflow-x:auto;gap:0}}
-.bc-s{{color:var(--t3);cursor:pointer;padding:2px 8px;border-radius:4px;transition:.1s}}
-.bc-s:hover{{color:var(--t1);background:rgba(255,255,255,.08)}}
-.bc-s.cur{{color:var(--t1);font-weight:600;cursor:default}}
-.bc-sep{{color:var(--t3);font-size:11px;padding:0 1px}}
-main{{padding:16px;max-width:1100px;margin:0 auto}}
-.krow{{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}}
-.kpi{{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;flex:1 1 120px;min-width:100px}}
-.kpi.hl{{border-left:3px solid var(--acc)}}
-.kpi-l{{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:4px}}
-.kpi-v{{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:800;line-height:1}}
-.kpi-s{{font-size:11px;color:var(--t3);margin-top:3px}}
-.ok{{color:var(--ok)}}.warn{{color:var(--warn)}}.crit{{color:var(--crit)}}.neu{{color:var(--neu)}}
-.sec{{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--t2);
-     margin:20px 0 12px;display:flex;align-items:center;gap:10px;letter-spacing:.02em}}
-.sec::after{{content:'';flex:1;height:1px;background:var(--bdr)}}
-.card{{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:12px;overflow:hidden}}
-.card.acc{{border-left:3px solid var(--acc)}}.card.grn{{border-left:3px solid var(--ok)}}
-.card.yel{{border-left:3px solid var(--warn)}}.card.red{{border-left:3px solid var(--crit)}}
-.card-hd{{padding:10px 16px;border-bottom:1px solid var(--bdr);font-size:12px;font-weight:600;
-  color:var(--t2);display:flex;align-items:center;justify-content:space-between;gap:8px}}
-.card-hd-r{{font-size:10px;color:var(--t3);font-weight:400}}
-.card-bd{{padding:14px 16px}}
-.g2{{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
-@media(max-width:720px){{.g2{{grid-template-columns:1fr}}}}
-.tw{{overflow-x:auto}}
-table{{width:100%;border-collapse:collapse;font-size:13px}}
-th{{background:var(--s2);color:var(--t3);padding:8px 11px;text-align:left;font-size:10px;
-    text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}}
-td{{padding:8px 11px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}}
+body{{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111827;font-size:12px;line-height:1.45;
+     -webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.page{{width:210mm;min-height:auto;margin:0 auto;padding:10mm 12mm 8mm}}
+/* HEADER */
+.hdr{{display:flex;justify-content:space-between;align-items:flex-start;
+      border-bottom:3px solid #1BBEAA;padding-bottom:7px;margin-bottom:10px}}
+.hdr-left{{flex:1}}
+.htitle{{font-size:20px;font-weight:800;color:#111827;line-height:1.1}}
+.htitle .acc{{color:#1BBEAA}}
+.hsub{{font-size:9px;color:#6B7280;margin-top:2px}}
+.date-box{{background:#1A3252;color:#fff;border-radius:6px;padding:6px 12px;text-align:center;min-width:80px}}
+.date-box-l{{font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#93C5FD;margin-bottom:1px}}
+.date-box-v{{font-size:14px;font-weight:800}}
+/* KPIs */
+.krow{{display:flex;gap:8px;margin-bottom:10px}}
+.kpi{{flex:1;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:7px;padding:8px 10px;border-left:3px solid #1BBEAA}}
+.kpi-l{{font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;margin-bottom:2px}}
+.kpi-v{{font-size:26px;font-weight:800;line-height:1;color:#1A3252}}
+.kpi-v.acc{{color:#1BBEAA}}.kpi-v.ok{{color:#15803D}}.kpi-v.warn{{color:#D97706}}
+.kpi-s{{font-size:9px;color:#9CA3AF;margin-top:2px}}
+/* MIX */
+.sec{{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6B7280;
+      margin:8px 0 5px;display:flex;align-items:center;gap:8px}}
+.sec::after{{content:'';flex:1;height:1px;background:#E2E8F0}}
+.mix-bar{{height:16px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:6px}}
+.mix-leg{{display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:8px}}
+.mix-li{{display:flex;align-items:center;gap:5px;font-size:9px;color:#374151}}
+.mix-dot{{width:8px;height:8px;border-radius:50%;flex-shrink:0}}
+.mix-n{{font-weight:700;color:#111827}}
+/* TABELA */
+table{{width:100%;border-collapse:collapse;font-size:10px}}
+th{{background:#1E3A5F;color:#fff;padding:4px 7px;text-align:left;font-size:8px;
+    text-transform:uppercase;letter-spacing:.04em;font-weight:700}}
+th.r{{text-align:right}}
+td{{padding:3px 7px;border-bottom:1px solid #F1F5F9;vertical-align:middle}}
+td.r{{text-align:right;font-variant-numeric:tabular-nums}}
 tr:last-child td{{border-bottom:none}}
-tr:hover td{{background:rgba(123,97,255,.06)}}
-.nm{{font-weight:600}}.mt{{font-size:11px;color:var(--t3)}}
-.pill{{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}}
-.p-ok{{background:var(--ok-d);color:var(--ok)}}.p-warn{{background:var(--warn-d);color:var(--warn)}}
-.p-crit{{background:var(--crit-d);color:var(--crit)}}.p-neu{{background:var(--neu-d);color:var(--neu)}}
-.br{{display:inline-flex;align-items:center;gap:5px}}
-.bg{{background:var(--s2);border-radius:3px;height:5px;width:60px;flex-shrink:0}}
-.fg{{height:100%;border-radius:3px}}
-.mix-stack{{display:flex;height:22px;border-radius:5px;overflow:hidden;margin-bottom:12px}}
-.mix-leg{{display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:4px}}
-.mix-li{{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2)}}
-.mix-dot{{width:9px;height:9px;border-radius:50%;flex-shrink:0}}
-.mix-n{{color:var(--t1);font-weight:600;font-variant-numeric:tabular-nums}}
-.mix-pct{{color:var(--t3);font-size:11px}}
-.ftr{{text-align:center;font-size:11px;color:var(--t3);padding:16px 0 8px}}
-@media(max-width:600px){{main{{padding:10px 8px}}th,td{{padding:6px 8px;font-size:12px}}}}
+tr:nth-child(even) td{{background:#F8FAFC}}
+.ln{{font-weight:700;font-size:11px;color:#1A3252}}
+.pn{{font-weight:800;font-size:13px;color:#1BBEAA}}
+.pill{{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700}}
+.p-ok{{background:#DCFCE7;color:#15803D}}
+.p-warn{{background:#FEF3C7;color:#D97706}}
+.p-crit{{background:#FEE2E2;color:#DC2626}}
+.p-neu{{background:#DBEAFE;color:#1D4ED8}}
+.bar-wrap{{background:#E2E8F0;border-radius:2px;height:5px;width:55px;display:inline-block;vertical-align:middle}}
+.bar-fill{{height:100%;border-radius:2px}}
+/* FOOTER */
+.ftr{{text-align:center;font-size:8px;color:#9CA3AF;padding-top:6px;
+      margin-top:8px;border-top:1px solid #F1F5F9}}
 @media print{{
   *{{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
-  .hdr{{position:static}}.pdf-btn,.bc{{display:none!important}}
-  main{{padding:4px 8px}}body{{font-size:10px;line-height:1.3}}
-  .krow{{gap:5px;margin-bottom:8px}}.kpi{{padding:7px 10px;flex:1 1 70px}}
-  .kpi-v{{font-size:20px}}.kpi-l{{font-size:8px}}.kpi-s{{font-size:8px}}
-  .sec{{font-size:12px;margin:8px 0 5px}}.card{{margin-bottom:6px}}
-  th{{padding:4px 7px;font-size:9px}}td{{padding:4px 7px;font-size:10px}}
+  .page{{width:100%;padding:6mm 8mm}}
+  @page{{size:A4 portrait;margin:0}}
+}}
+@media(max-width:600px){{
+  .page{{width:100%;padding:4vw}}
+  .krow{{flex-wrap:wrap}}
+  .kpi{{flex:1 1 45%}}
 }}
 </style>
 </head>
 <body>
-<div class="hdr">
-  <div class="hdr-inner">
-    <div class="brand">QH<b>&middot;</b>Passageiros</div>
-    <span class="flash-tag">D-2</span>
-    <div class="hdr-dt">{SEMANA} &middot; {DIA_FMT} &middot; Gerado {HGer}</div>
-    <button class="pdf-btn" onclick="window.print()">&#x1F4E5; Salvar PDF</button>
+<div class="page">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="htitle">FLASH <span class="acc">PASSAGEIROS</span></div>
+      <div class="hsub">Demanda Operacional · {SEMANA} {DIA_FMT} · Gerado {HGer}</div>
+    </div>
+    <div class="date-box">
+      <div class="date-box-l">DATA</div>
+      <div class="date-box-v">{DIA_FMT}</div>
+    </div>
   </div>
-  <div class="bc">
-    <span class="bc-s cur">Resumo</span>
-    <span class="bc-sep"> › </span>
-    <span class="bc-s" onclick="document.getElementById('sec-linhas').scrollIntoView({{behavior:'smooth'}})">Linhas</span>
-    <span class="bc-sep"> › </span>
-    <span class="bc-s" onclick="document.getElementById('sec-mix').scrollIntoView({{behavior:'smooth'}})">Mix de Tarifa</span>
-  </div>
-</div>
-<main id="main">
+
   <div class="krow" id="krow"></div>
-  <div class="g2">
-    <div class="card acc">
-      <div class="card-hd">Mix de Tarifa<span class="card-hd-r" id="mix-total"></span></div>
-      <div class="card-bd" id="sec-mix">
-        <div class="mix-stack" id="mixBar"></div>
-        <div class="mix-leg" id="mixLeg"></div>
-      </div>
-    </div>
-    <div class="card acc">
-      <div class="card-hd">Proporção Visual</div>
-      <div class="card-bd" style="display:flex;align-items:center;gap:16px">
-        <canvas id="donut" width="130" height="130" style="flex-shrink:0"></canvas>
-        <div id="donutLeg" style="flex:1;font-size:12px"></div>
-      </div>
-    </div>
-  </div>
-  <div class="sec" id="sec-linhas">Demanda por Linha</div>
-  <div class="card">
-    <div class="card-hd">Ranking por Passageiros <span class="card-hd-r" id="tbl-sub"></span></div>
-    <div class="tw"><table id="lnTbl"></table></div>
-  </div>
-  <div class="ftr">QH Operações · Flash Passageiros · {SEMANA} {DIA_FMT} · D-2</div>
-</main>
+
+  <div class="sec">Mix de Tarifa</div>
+  <div class="mix-bar" id="mixBar"></div>
+  <div class="mix-leg" id="mixLeg"></div>
+
+  <div class="sec">Demanda por Linha</div>
+  <table id="lnTbl"></table>
+
+  <div class="ftr">QH Operações · Flash Passageiros · {SEMANA} {DIA_FMT} · Fonte: viagens_qh</div>
+</div>
 <script>
 const D = {D_JS};
 function fN(n){{return Math.round(n).toLocaleString('pt-BR');}}
 function fI(n){{return n.toFixed(2).replace('.',',');}}
 
-// KPIs
-const ipkCls = D.ipk>=2.5?'ok':D.ipk>=1.8?'warn':'crit';
+const ipkCls = D.ipk>=2.5?'ok':D.ipk>=1.8?'':'warn';
 document.getElementById('krow').innerHTML = `
-  <div class="kpi hl">
-    <div class="kpi-l">Passageiros Transportados</div>
-    <div class="kpi-v" style="color:#7B61FF">${{fN(D.total)}}</div>
-    <div class="kpi-s">${{D.linhas.length}} linhas com bilhetagem registrada</div>
-  </div>
-  <div class="kpi hl">
-    <div class="kpi-l">KM Rodados</div>
-    <div class="kpi-v warn">${{fN(D.km)}}</div>
-    <div class="kpi-s">${{D.linhas.length}} linhas em operação</div>
-  </div>
-  <div class="kpi hl">
-    <div class="kpi-l">IPK — Passageiros / KM</div>
+  <div class="kpi"><div class="kpi-l">Passageiros Transportados</div>
+    <div class="kpi-v acc">${{fN(D.total)}}</div>
+    <div class="kpi-s">${{D.linhas.length}} linhas com bilhetagem</div></div>
+  <div class="kpi"><div class="kpi-l">KM Rodados</div>
+    <div class="kpi-v">${{fN(D.km)}}</div>
+    <div class="kpi-s">quilômetros operados</div></div>
+  <div class="kpi"><div class="kpi-l">IPK (Pax / KM)</div>
     <div class="kpi-v ${{ipkCls}}">${{fI(D.ipk)}}</div>
-    <div class="kpi-s">Índice de eficiência de demanda</div>
-  </div>`;
+    <div class="kpi-s">índice de eficiência</div></div>`;
 
-// Mix bar + legenda
-document.getElementById('mix-total').textContent = 'Total: ' + fN(D.total) + ' pax';
 const bar = document.getElementById('mixBar');
 const leg = document.getElementById('mixLeg');
-D.cats.forEach(c => {{
-  const s = document.createElement('div');
-  s.style.cssText = `width:${{c.pct}}%;height:100%;background:${{c.cor}};flex-shrink:0`;
-  s.title = `${{c.label}}: ${{fN(c.n)}} (${{c.pct}}%)`;
+D.cats.forEach(c=>{{
+  const s=document.createElement('div');
+  s.style.cssText=`width:${{c.pct}}%;height:100%;background:${{c.cor}};flex-shrink:0`;
+  s.title=`${{c.label}}: ${{fN(c.n)}} (${{c.pct}}%)`;
   bar.appendChild(s);
-  leg.innerHTML += `<div class="mix-li">
+  leg.innerHTML+=`<div class="mix-li">
     <span class="mix-dot" style="background:${{c.cor}}"></span>
     <span>${{c.label}}</span>
-    <span class="mix-n">${{fN(c.n)}}</span>
-    <span class="mix-pct">${{c.pct}}%</span>
-  </div>`;
+    <span class="mix-n">&nbsp;${{fN(c.n)}}</span>
+    <span style="color:#9CA3AF">&nbsp;${{c.pct}}%</span></div>`;
 }});
 
-// Donut canvas
-const cv = document.getElementById('donut');
-const cx2 = cv.getContext('2d');
-const CX=65,CY=65,R=58,RI=36;
-let ang=-Math.PI/2;
-D.cats.forEach(c=>{{
-  const a=(c.pct/100)*2*Math.PI;
-  cx2.beginPath();cx2.moveTo(CX,CY);cx2.arc(CX,CY,R,ang,ang+a);cx2.closePath();
-  cx2.fillStyle=c.cor;cx2.fill();ang+=a;
-}});
-cx2.beginPath();cx2.arc(CX,CY,RI,0,2*Math.PI);cx2.fillStyle='#122540';cx2.fill();
-cx2.fillStyle='#7BA8CA';cx2.font='bold 13px Barlow Condensed,sans-serif';
-cx2.textAlign='center';cx2.fillText(fN(D.total)+'pax',CX,CY+5);
-document.getElementById('donutLeg').innerHTML = D.cats.map(c=>
-  `<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-    <span style="width:10px;height:10px;border-radius:2px;background:${{c.cor}};flex-shrink:0;display:inline-block"></span>
-    <span style="color:var(--t2)">${{c.label}}</span>
-    <span style="margin-left:auto;font-weight:700;color:var(--t1)">${{c.pct}}%</span>
-  </div>`).join('');
-
-// Tabela de linhas
 const paxMax=D.linhas[0]?.pax||1;
 const ipkMax=Math.max(...D.linhas.map(l=>l.ipk));
-document.getElementById('tbl-sub').textContent=`IPK máx. ${{fI(ipkMax)}} · ${{D.linhas.length}} linhas · ordenado por passageiros`;
 document.getElementById('lnTbl').innerHTML=`<thead><tr>
-  <th>Linha</th><th style="text-align:right">Passageiros</th>
-  <th style="width:110px">Demanda</th>
-  <th style="text-align:right">IPK</th>
-  <th style="width:90px">Eficiência</th>
-  <th style="text-align:right">KM</th>
-  <th style="text-align:right">Viagens</th>
+  <th>Linha</th><th class="r">Pax</th><th>Demanda</th>
+  <th class="r">IPK</th><th class="r">KM</th><th class="r">Viagens</th>
 </tr></thead><tbody>${{D.linhas.map(l=>{{
   const pw=Math.round(l.pax/paxMax*100);
-  const iw=Math.round(l.ipk/ipkMax*100);
-  const ipkPill=l.ipk>=2.5?'p-ok':l.ipk<1.5?'p-crit':'p-neu';
+  const pk=l.ipk>=2.5?'p-ok':l.ipk<1.5?'p-crit':'p-neu';
   return `<tr>
-    <td class="nm">${{l.l}}</td>
-    <td style="text-align:right;font-weight:700;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:#7B61FF">${{fN(l.pax)}}</td>
-    <td><div class="br"><div class="bg"><div class="fg" style="width:${{pw}}%;background:#7B61FF;opacity:.7"></div></div></div></td>
-    <td style="text-align:right"><span class="pill ${{ipkPill}}">${{fI(l.ipk)}}</span></td>
-    <td><div class="bg" style="width:90px"><div class="fg" style="width:${{iw}}%;background:var(--ok);opacity:.75"></div></div></td>
-    <td style="text-align:right;color:var(--t3)">${{l.v}}</td>
+    <td class="ln">${{l.l}}</td>
+    <td class="r pn">${{fN(l.pax)}}</td>
+    <td><span class="bar-wrap"><span class="bar-fill" style="width:${{pw}}%;background:#1BBEAA;display:block"></span></span></td>
+    <td class="r"><span class="pill ${{pk}}">${{fI(l.ipk)}}</span></td>
+    <td class="r" style="color:#6B7280">${{fN(l.km)}}</td>
+    <td class="r" style="color:#6B7280">${{l.v}}</td>
   </tr>`;
 }}).join('')}}</tbody>`;
 </script>
@@ -410,11 +343,11 @@ with open(OUT, 'w', encoding='utf-8') as f:
     f.write(HTML)
 print(f"HTML gerado: {OUT}")
 
-webbrowser.open("file:///" + OUT.replace("\\", "/"))
 
 if PREVIEW:
-    print("\n[PREVIEW] Aberto no navegador. Envio ignorado.")
+    print("\n[PREVIEW] HTML gerado. Envio ignorado.")
     sys.exit(0)
+
 
 # ── PDF via Edge headless ──────────────────────────────────────────────────────
 _edge_candidates = [
