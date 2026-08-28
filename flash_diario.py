@@ -20,10 +20,14 @@ DB_LOCAL = r"C:\Users\monit\OneDrive\Área de Trabalho\Ferramenta QH\ocorrencias
 OUT      = r"C:\Users\monit\OneDrive\Área de Trabalho\flash_QH.html"
 
 TAD, TAI = 8, -5
+# Filtros alinhados ao BI: FLOOR(diff) > TAD  →  atraso só a partir de 9 min inteiros
+# (DIFF>8 contaria 8.1 min; FLOOR>8 só conta 9+ min, igual ao BI)
 EX   = "'97TR','98TR','99TR'"
 DIFF = ("CASE WHEN iniciorealizado='' THEN NULL ELSE "
         "EXTRACT(EPOCH FROM (iniciorealizado::timestamp"
         " - inicioprogramado::timestamp))/60 END")
+DIFF_ATD = f"FLOOR(({DIFF})) > {TAD}"   # atraso: inteiro > 8  →  >= 9 min
+DIFF_ADI = f"({DIFF}) < {TAI}"          # adiantado: < -5 min (já correto)
 
 TERMINAIS_PY = {
     "Manoel Feio":        ["03TR","05TR","07TR","09TR","11TR","20TR","02TR"],
@@ -52,8 +56,8 @@ print(f"Conectado. Extraindo {ONTEM} (tol: atd>{TAD} min / adi>{abs(TAI)} min)�
 cur.execute(f"""
 SELECT COUNT(*) as v,
   COUNT(*) FILTER(WHERE iniciorealizado='') as perd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})>{TAD}) as atd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})<{TAI}) as adi,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
   ROUND(AVG(({DIFF})::numeric) FILTER(WHERE ({DIFF})>0 AND ({DIFF})<60),1) as am
 FROM viagens_qh
 WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
@@ -73,8 +77,8 @@ cur.execute(f"""
 SELECT linha,
   COUNT(*) as v,
   COUNT(*) FILTER(WHERE iniciorealizado='') as perd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})>{TAD}) as atd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})<{TAI}) as adi,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
   ROUND(AVG(({DIFF})::numeric) FILTER(WHERE ({DIFF})>0 AND ({DIFF})<60),1) as am
 FROM viagens_qh
 WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
@@ -95,8 +99,8 @@ cur.execute(f"""
 SELECT linha, COALESCE(NULLIF(TRIM(sentido),''),'?') as sent,
   COUNT(*) as v,
   COUNT(*) FILTER(WHERE iniciorealizado='') as perd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})>{TAD}) as atd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})<{TAI}) as adi
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi
 FROM viagens_qh
 WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
   AND linha NOT IN ({EX})
@@ -115,8 +119,8 @@ cur.execute(f"""
 SELECT COALESCE(NULLIF(TRIM(tabela),''),'Sem tabela') as tab,
   COUNT(*) as v,
   COUNT(*) FILTER(WHERE iniciorealizado='') as perd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})>{TAD}) as atd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})<{TAI}) as adi
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi
 FROM viagens_qh
 WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
   AND linha NOT IN ({EX})
@@ -137,8 +141,8 @@ WITH base AS (
     MODE() WITHIN GROUP(ORDER BY veiculo) as vei,
     COUNT(*) as v,
     COUNT(*) FILTER(WHERE iniciorealizado='') as perd,
-    COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})>{TAD}) as atd,
-    COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})<{TAI}) as adi,
+    COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
+    COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
     ROUND(AVG(({DIFF})::numeric) FILTER(WHERE ({DIFF})>0 AND ({DIFF})<60),1) as am
   FROM viagens_qh
   WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
@@ -168,8 +172,8 @@ WITH base AS (
     MODE() WITHIN GROUP(ORDER BY veiculo) as vei,
     COUNT(*) as v,
     COUNT(*) FILTER(WHERE iniciorealizado='') as perd,
-    COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})>{TAD}) as atd,
-    COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})<{TAI}) as adi,
+    COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
+    COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
     ROUND(AVG(({DIFF})::numeric) FILTER(WHERE ({DIFF})>0 AND ({DIFF})<60),1) as am
   FROM viagens_qh
   WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
@@ -205,14 +209,14 @@ SELECT matricula,
        ROUND(({DIFF})::numeric,1) as dif,
        COALESCE(NULLIF(TRIM(ponto_inicio),''),'') as local,
        CASE WHEN iniciorealizado='' THEN 'Perdida'
-            WHEN ({DIFF})>{TAD} THEN 'Atrasada'
+            WHEN {DIFF_ATD} THEN 'Atrasada'
             ELSE 'Adiantada' END as st
 FROM viagens_qh
 WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
   AND linha NOT IN ({EX})
   AND (iniciorealizado=''
-       OR (iniciorealizado<>'' AND ({DIFF})>{TAD})
-       OR (iniciorealizado<>'' AND ({DIFF})<{TAI}))
+       OR (iniciorealizado<>'' AND {DIFF_ATD})
+       OR (iniciorealizado<>'' AND {DIFF_ADI}))
 ORDER BY
   CASE WHEN iniciorealizado='' THEN 0 ELSE 1 END,
   ABS(ROUND(({DIFF})::numeric,1)) DESC NULLS LAST,
@@ -230,7 +234,7 @@ for r in cur.fetchall():
 cur.execute(f"""
 SELECT COALESCE(NULLIF(TRIM(veiculo),''),'—') as vei,
   COUNT(*) FILTER(WHERE iniciorealizado='' OR (iniciorealizado<>'' AND
-    (({DIFF})>{TAD} OR ({DIFF})<{TAI}))) as n_crit,
+    ({DIFF_ATD} OR {DIFF_ADI}))) as n_crit,
   COUNT(*) as v_total,
   ARRAY_AGG(DISTINCT linha) as linhas,
   MODE() WITHIN GROUP(ORDER BY matricula) as mat,
@@ -240,7 +244,7 @@ WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
   AND linha NOT IN ({EX}) AND veiculo IS NOT NULL AND TRIM(veiculo)<>''
 GROUP BY vei
 HAVING COUNT(*) FILTER(WHERE iniciorealizado='' OR (iniciorealizado<>'' AND
-  (({DIFF})>{TAD} OR ({DIFF})<{TAI}))) >= 3
+  ({DIFF_ATD} OR {DIFF_ADI}))) >= 3
 ORDER BY n_crit DESC LIMIT 8
 """)
 vei_reinc = []
@@ -255,10 +259,10 @@ SELECT matricula,
   MODE() WITHIN GROUP(ORDER BY TRIM(motorista)) as nome,
   MODE() WITHIN GROUP(ORDER BY veiculo) as vei,
   COUNT(*) FILTER(WHERE iniciorealizado='') as perd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})>{TAD}) as atd,
-  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND ({DIFF})<{TAI}) as adi,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
   COUNT(*) FILTER(WHERE iniciorealizado='' OR (iniciorealizado<>'' AND
-    (({DIFF})>{TAD} OR ({DIFF})<{TAI}))) as n_crit,
+    ({DIFF_ATD} OR {DIFF_ADI}))) as n_crit,
   COUNT(*) as v_total,
   ARRAY_AGG(DISTINCT linha) as linhas
 FROM viagens_qh
@@ -266,7 +270,7 @@ WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
   AND linha NOT IN ({EX}) AND matricula IS NOT NULL
 GROUP BY matricula
 HAVING COUNT(*) FILTER(WHERE iniciorealizado='' OR (iniciorealizado<>'' AND
-  (({DIFF})>{TAD} OR ({DIFF})<{TAI}))) >= 3
+  ({DIFF_ATD} OR {DIFF_ADI}))) >= 3
 ORDER BY n_crit DESC LIMIT 12
 """)
 mot_reinc = []
@@ -291,8 +295,8 @@ WITH primeiras AS (
   SELECT DISTINCT ON (linha) linha,
     TO_CHAR(inicioprogramado::timestamp,'HH24:MI') as hp,
     CASE WHEN iniciorealizado='' THEN 'Perdida'
-         WHEN ({DIFF})>{TAD} THEN 'Atrasada'
-         WHEN ({DIFF})<{TAI} THEN 'Adiantada'
+         WHEN {DIFF_ATD} THEN 'Atrasada'
+         WHEN {DIFF_ADI} THEN 'Adiantada'
          ELSE 'OK' END as st,
     ROUND(({DIFF})::numeric,1) as dif
   FROM viagens_qh
@@ -424,10 +428,9 @@ HTML = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Flash QH</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#fff;color:#111827;font-size:13px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111827;font-size:13px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .page{width:210mm;margin:0 auto;padding:12mm 14mm 10mm}
 .page-break{page-break-after:always}
 .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1BBEAA;padding-bottom:8px;margin-bottom:14px}
