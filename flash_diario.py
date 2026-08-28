@@ -22,7 +22,8 @@ OUT      = r"C:\Users\monit\OneDrive\Área de Trabalho\flash_QH.html"
 TAD, TAI = 8, -5
 # Filtros alinhados ao BI: FLOOR(diff) > TAD  →  atraso só a partir de 9 min inteiros
 # (DIFF>8 contaria 8.1 min; FLOOR>8 só conta 9+ min, igual ao BI)
-EX   = "'97TR','98TR','99TR'"
+EX   = "'97TR','98TR','99TR','99'"
+ATIV = "('Viagem Normal','Viagem Extra')"  # Viagem Extra entra no cálculo de CP/PT (alinhado ao BI)
 DIFF = ("CASE WHEN iniciorealizado='' THEN NULL ELSE "
         "EXTRACT(EPOCH FROM (iniciorealizado::timestamp"
         " - inicioprogramado::timestamp))/60 END")
@@ -60,7 +61,7 @@ SELECT COUNT(*) as v,
   COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
   ROUND(AVG(({DIFF})::numeric) FILTER(WHERE ({DIFF})>0 AND ({DIFF})<60),1) as am
 FROM viagens_qh
-WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
   AND linha NOT IN ({EX})
 """)
 v,perd,atd,adi,am = cur.fetchone()
@@ -81,7 +82,7 @@ SELECT linha,
   COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
   ROUND(AVG(({DIFF})::numeric) FILTER(WHERE ({DIFF})>0 AND ({DIFF})<60),1) as am
 FROM viagens_qh
-WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
   AND linha NOT IN ({EX})
 GROUP BY linha HAVING COUNT(*)>=3
 ORDER BY linha
@@ -104,7 +105,7 @@ SELECT linha,
   COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
   COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi
 FROM viagens_qh
-WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
   AND linha NOT IN ({EX})
 GROUP BY linha
 ORDER BY linha
@@ -122,7 +123,7 @@ SELECT linha, COALESCE(NULLIF(TRIM(sentido),''),'?') as sent,
   COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
   COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi
 FROM viagens_qh
-WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
   AND linha NOT IN ({EX})
 GROUP BY linha, sent ORDER BY linha, sent
 """)
@@ -142,7 +143,7 @@ SELECT COALESCE(NULLIF(TRIM(tabela),''),'Sem tabela') as tab,
   COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
   COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi
 FROM viagens_qh
-WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
   AND linha NOT IN ({EX})
 GROUP BY tab ORDER BY tab
 """)
@@ -165,7 +166,7 @@ WITH base AS (
     COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
     ROUND(AVG(({DIFF})::numeric) FILTER(WHERE ({DIFF})>0 AND ({DIFF})<60),1) as am
   FROM viagens_qh
-  WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+  WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
     AND linha NOT IN ({EX})
   GROUP BY linha, matricula HAVING COUNT(*)>=3
 )
@@ -196,7 +197,7 @@ WITH base AS (
     COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi,
     ROUND(AVG(({DIFF})::numeric) FILTER(WHERE ({DIFF})>0 AND ({DIFF})<60),1) as am
   FROM viagens_qh
-  WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+  WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
     AND linha NOT IN ({EX})
   GROUP BY linha, matricula HAVING COUNT(*)>=3
 )
@@ -232,7 +233,7 @@ SELECT matricula,
             WHEN {DIFF_ATD} THEN 'Atrasada'
             ELSE 'Adiantada' END as st
 FROM viagens_qh
-WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
   AND linha NOT IN ({EX})
   AND (iniciorealizado=''
        OR (iniciorealizado<>'' AND {DIFF_ATD})
@@ -260,7 +261,7 @@ SELECT COALESCE(NULLIF(TRIM(veiculo),''),'—') as vei,
   MODE() WITHIN GROUP(ORDER BY matricula) as mat,
   MODE() WITHIN GROUP(ORDER BY TRIM(motorista)) as nome
 FROM viagens_qh
-WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
   AND linha NOT IN ({EX}) AND veiculo IS NOT NULL AND TRIM(veiculo)<>''
 GROUP BY vei
 HAVING COUNT(*) FILTER(WHERE iniciorealizado='' OR (iniciorealizado<>'' AND
@@ -286,7 +287,7 @@ SELECT matricula,
   COUNT(*) as v_total,
   ARRAY_AGG(DISTINCT linha) as linhas
 FROM viagens_qh
-WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
   AND linha NOT IN ({EX}) AND matricula IS NOT NULL
 GROUP BY matricula
 HAVING COUNT(*) FILTER(WHERE iniciorealizado='' OR (iniciorealizado<>'' AND
@@ -320,7 +321,7 @@ WITH primeiras AS (
          ELSE 'OK' END as st,
     ROUND(({DIFF})::numeric,1) as dif
   FROM viagens_qh
-  WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+  WHERE data='{ONTEM}' AND atividade IN {ATIV} AND inicioprogramado<>''
     AND linha NOT IN ({EX})
   ORDER BY linha, inicioprogramado::timestamp ASC
 )
@@ -452,73 +453,89 @@ HTML = r"""<!DOCTYPE html>
 <title>Flash QH</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111827;font-size:13px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111827;font-size:14px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .page{width:210mm;margin:0 auto;padding:12mm 14mm 10mm}
 .page-break{page-break-after:always}
-.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1BBEAA;padding-bottom:8px;margin-bottom:14px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1BBEAA;padding-bottom:10px;margin-bottom:16px}
 .hdr-left{flex:1}
 .page-title{font-size:22px;font-weight:800;color:#111827;letter-spacing:-.3px;line-height:1.1}
 .page-title .title-date{color:#1BBEAA}
-.page-subtitle{font-size:10px;color:#6B7280;margin-top:3px}
-.page-source{font-size:9px;color:#9CA3AF;margin-top:1px}
+.page-subtitle{font-size:11px;color:#6B7280;margin-top:4px}
 .date-box{background:#1A3252;color:#fff;border-radius:6px;padding:7px 14px;text-align:center;min-width:90px;flex-shrink:0}
 .date-box-l{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:#93C5FD;margin-bottom:2px}
 .date-box-v{font-size:16px;font-weight:800;white-space:nowrap}
-.kpi-row{display:flex;gap:10px;margin-bottom:12px}
+.kpi-row{display:flex;gap:10px;margin-bottom:10px}
 .kpi{flex:1;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px}
 .kpi.accent{border-left-width:4px;border-left-style:solid}
 .kpi.accent.ok{border-left-color:#18C46A}
 .kpi.accent.warn{border-left-color:#F5A623}
 .kpi.accent.crit{border-left-color:#E04B4B}
-.kpi-l{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;margin-bottom:2px}
-.kpi-v{font-size:30px;font-weight:800;line-height:1}
+.kpi-l{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#6B7280;margin-bottom:3px}
+.kpi-v{font-size:34px;font-weight:800;line-height:1}
 .kpi-v.ok{color:#15803D}.kpi-v.warn{color:#D97706}.kpi-v.crit{color:#DC2626}.kpi-v.neu{color:#1E40AF}
-.kpi-s{font-size:10px;color:#6B7280;margin-top:2px}
-.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6B7280;margin:10px 0 5px;display:flex;align-items:center;gap:8px}
+.kpi-v-sm{font-size:24px;font-weight:800;line-height:1}
+.kpi-v-sm.ok{color:#15803D}.kpi-v-sm.warn{color:#D97706}.kpi-v-sm.crit{color:#DC2626}.kpi-v-sm.neu{color:#1E40AF}
+.kpi-s{font-size:10px;color:#6B7280;margin-top:3px}
+.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6B7280;margin:12px 0 6px;display:flex;align-items:center;gap:8px}
 .sec::after{content:'';flex:1;height:1px;background:#E2E8F0}
-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}
 th{background:#1E3A5F;color:#fff;padding:5px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+th.r{text-align:right}
 td{padding:5px 8px;border-bottom:1px solid #F1F5F9;vertical-align:middle}
+td.r{text-align:right;font-variant-numeric:tabular-nums}
 tr:last-child td{border-bottom:none}
 tr:nth-child(even) td{background:#F8FAFC}
-.bd{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.bd{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
 .bd-ok{background:#DCFCE7;color:#15803D}
 .bd-warn{background:#FEF3C7;color:#D97706}
 .bd-crit{background:#FEE2E2;color:#DC2626}
-.tcard{border:1px solid #E2E8F0;border-radius:10px;margin-bottom:14px;overflow:hidden;page-break-inside:avoid}
-.tcard-hdr{background:#1A3252;color:#fff;padding:9px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.tcard-nome{font-size:15px;font-weight:800;flex:1}
-.tkpi{text-align:center;background:rgba(255,255,255,.12);border-radius:6px;padding:4px 10px;min-width:68px}
-.tkpi-l{font-size:8px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.05em}
+.tcard{border:1px solid #E2E8F0;border-radius:10px;margin-bottom:16px;overflow:hidden;page-break-inside:avoid}
+.tcard-hdr{background:#1A3252;color:#fff;padding:11px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tcard-nome{font-size:15px;font-weight:800;flex:1;text-transform:uppercase;letter-spacing:.03em}
+.tkpi{text-align:center;background:rgba(255,255,255,.13);border-radius:6px;padding:5px 12px;min-width:72px}
+.tkpi-l{font-size:8px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.07em;margin-bottom:1px}
 .tkpi-v{font-size:20px;font-weight:800}
 .tkpi-v.ok{color:#4ADE80}.tkpi-v.warn{color:#FCD34D}.tkpi-v.crit{color:#FCA5A5}
-.tcard-body{padding:10px 14px}
-.margens{display:flex;gap:8px;margin-bottom:10px}
-.mbox{flex:1;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:7px 10px}
-.mbox.danger{background:#FEF2F2;border-color:#FECACA}
-.mbox-l{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;margin-bottom:2px}
-.mbox-n{font-size:22px;font-weight:800;line-height:1}
-.mbox-n.ok{color:#15803D}.mbox-n.warn{color:#D97706}.mbox-n.crit{color:#DC2626}
-.mbox-s{font-size:10px;color:#6B7280;margin-top:2px}
-.pt-item{border-radius:6px;padding:7px 10px;margin-bottom:5px;border-left:4px solid;font-size:11px;line-height:1.4}
+.tcard-body{padding:12px 16px}
+.tstats{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tstat{flex:1;min-width:80px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:8px 10px;text-align:center}
+.tstat-l{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:#6B7280;margin-bottom:3px}
+.tstat-v{font-size:20px;font-weight:800;line-height:1}
+.tstat-v.ok{color:#15803D}.tstat-v.warn{color:#D97706}.tstat-v.crit{color:#DC2626}.tstat-v.neu{color:#1E40AF}
+.pt-item{border-radius:6px;padding:9px 12px;margin-bottom:6px;border-left:4px solid;font-size:12px;line-height:1.45}
 .pt-item.perdida{background:#FFF1F2;border-color:#E04B4B}
 .pt-item.atrasada{background:#FFFBEB;border-color:#F5A623}
 .pt-item.adiantada{background:#EFF6FF;border-color:#60A5FA}
-.pt-top{display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap}
-.pt-tipo{font-weight:800;font-size:11px}
+.pt-top{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap}
+.pt-tipo{font-weight:800;font-size:12px}
 .pt-tipo.p{color:#DC2626}.pt-tipo.a{color:#D97706}.pt-tipo.d{color:#2563EB}
-.pt-id{font-weight:700;font-size:12px}
+.pt-id{font-weight:700;font-size:13px}
 .sep{color:#D1D5DB}
-.pt-det{font-size:10px;color:#374151}
-.pt-mot{font-size:10px;color:#6B7280;font-style:italic;margin-top:1px}
-.ok-bar{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:7px 12px;color:#15803D;font-size:11px;font-weight:600;margin-bottom:8px}
-.ftr{text-align:center;font-size:9px;color:#9CA3AF;padding-top:8px;margin-top:12px;border-top:1px solid #F1F5F9}
+.pt-det{font-size:11px;color:#374151}
+.pt-mot{font-size:11px;color:#6B7280;font-style:italic;margin-top:2px}
+.ok-bar{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:8px 14px;color:#15803D;font-size:12px;font-weight:600;margin-bottom:10px}
+.ftr{text-align:center;font-size:9px;color:#9CA3AF;padding-top:10px;margin-top:14px;border-top:1px solid #F1F5F9}
+.tlines{margin:8px 0;font-size:10px;color:#6B7280}
+.lbadge{display:inline-block;background:#E2E8F0;color:#374151;border-radius:4px;padding:2px 7px;margin:2px 3px 2px 0;font-size:10px;font-weight:600}
+.lbadge.crit{background:#FEE2E2;color:#DC2626}
+.tmargens{font-size:11px;color:#6B7280;margin:6px 0 10px;padding:6px 10px;background:#F8FAFC;border-radius:6px;border:1px solid #E2E8F0}
+.tmarg{font-size:11px}
+.tmarg.ok{color:#15803D}.tmarg.warn{color:#D97706}.tmarg.crit{color:#DC2626}
+.tmarg-sep{margin:0 10px;color:#D1D5DB}
+.pt-hor{font-size:11px;color:#374151;margin:3px 0;font-weight:500}
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  body{font-size:10pt}
+  body{font-size:11pt}
   .page{width:100%;padding:8mm 10mm}
   .page-break{page-break-after:always}
   .tcard{page-break-inside:avoid}
+}
+@media(max-width:640px){
+  .page{width:100%;padding:4vw}
+  .kpi-row{flex-wrap:wrap}
+  .kpi{flex:1 1 45%}
+  .tstats{flex-wrap:wrap}
+  .tstat{flex:1 1 40%}
 }
 </style>
 </head>
@@ -537,51 +554,59 @@ function bcl(v,m){return v>=m?'bd-ok':v>=m-3?'bd-warn':'bd-crit';}
 function abrev(n){if(!n)return '';var p=n.trim().split(' ');return p.length<=2?n:p[0]+' '+p[p.length-1];}
 function sentStr(s){return s==='I'?'IDA':s==='V'?'VOLTA':s||'';}
 
-function page1(){
-  var cc=pcl(r.cp,MCP),pc=pcl(r.pt,MPT);
-  var tbl=D.terminais_data.filter(function(t){return t.tem_dados;}).map(function(t){
-    var mc=t.marg_cp>=0
-      ?'pode perder at\u00e9 <strong>'+t.marg_cp+'<\/strong>'
-      :'<strong style="color:#DC2626">excedeu '+(-t.marg_cp)+'<\/strong>';
-    var mp=t.marg_pt>=0
-      ?'pode ter at\u00e9 <strong>'+t.marg_pt+'<\/strong> ofensoras'
-      :'<strong style="color:#DC2626">excedeu '+(-t.marg_pt)+'<\/strong>';
-    return '<tr><td><strong>'+t.nome+'<\/strong><\/td>'
-      +'<td><span class="bd '+bcl(t.cp,MCP)+'">'+fP(t.cp)+'<\/span><\/td>'
-      +'<td><span class="bd '+bcl(t.pt,MPT)+'">'+fP(t.pt)+'<\/span><\/td>'
-      +'<td>'+fN(t.total)+'<\/td>'
-      +'<td style="'+(t.perd>0?'color:#DC2626;font-weight:700':'')+'">'+t.perd+'<\/td>'
-      +'<td>'+t.atd+'<\/td>'
-      +'<td style="font-size:10px">'+mc+'<\/td>'
-      +'<td style="font-size:10px">'+mp+'<\/td><\/tr>';
-  }).join('');
-  return '<div class="page page-break">'
-    +'<div class="hdr">'
+function mkHdr(){
+  return '<div class="hdr">'
     +'<div class="hdr-left">'
-    +'<div class="page-title">FLASH OPERACIONAL DO DIA <span class="title-date">( '+D.fmt+' )<\/span><\/div>'
-    +'<div class="page-subtitle">FLASH REPORT DIÁRIO · Cumprimento de Partida &amp; Pontualidade · '+D.fmt+' ('+D.sem+')<\/div>'
-    +'<div class="page-source">Fonte: viagens_qh · tol. atraso &gt;'+TAD+' min · adiant. &gt;'+TAI+' min<\/div>'
+    +'<div class="page-title">FLASH OPERACIONAL <span class="title-date">'+D.sem+' '+D.fmt+'<\/span><\/div>'
+    +'<div class="page-subtitle">Cumprimento de Partida \u00b7 Pontualidade \u00b7 tol. atraso &gt;'+TAD+' min \u00b7 adiant. &gt;'+TAI+' min<\/div>'
     +'<\/div>'
     +'<div class="date-box"><div class="date-box-l">DATA<\/div><div class="date-box-v">'+D.fmt+'<\/div><\/div>'
+    +'<\/div>';
+}
+
+function page1(){
+  var cc=pcl(r.cp,MCP),pc=pcl(r.pt,MPT);
+  var realizadas=r.v-r.perd;
+  return '<div class="page page-break">'
+    +mkHdr()
+    +'<div class="kpi-row">'
+    +'<div class="kpi accent '+cc+'" style="flex:2"><div class="kpi-l">CP \u2014 Cumprimento de Partida<\/div>'
+    +'<div class="kpi-v '+cc+'">'+fP(r.cp)+'<\/div><div class="kpi-s">Meta '+MCP+' %<\/div><\/div>'
+    +'<div class="kpi accent '+pc+'" style="flex:2"><div class="kpi-l">PT \u2014 Pontualidade<\/div>'
+    +'<div class="kpi-v '+pc+'">'+fP(r.pt)+'<\/div><div class="kpi-s">Meta '+MPT+' %<\/div><\/div>'
     +'<\/div>'
     +'<div class="kpi-row">'
-    +'<div class="kpi accent '+cc+'" style="flex:2"><div class="kpi-l">Cumprimento de Partida<\/div>'
-    +'<div class="kpi-v '+cc+'">'+fP(r.cp)+'<\/div><div class="kpi-s">Meta '+MCP+'\u00a0%<\/div><\/div>'
-    +'<div class="kpi accent '+pc+'" style="flex:2"><div class="kpi-l">Pontualidade<\/div>'
-    +'<div class="kpi-v '+pc+'">'+fP(r.pt)+'<\/div><div class="kpi-s">Meta '+MPT+'\u00a0%<\/div><\/div>'
-    +'<div class="kpi" style="flex:1"><div class="kpi-l">Previstas<\/div>'
-    +'<div class="kpi-v neu">'+fN(r.v)+'<\/div><div class="kpi-s">Realizadas: '+fN(r.v-r.perd)+'<\/div><\/div>'
-    +'<div class="kpi" style="flex:1"><div class="kpi-l">Perdidas<\/div>'
-    +'<div class="kpi-v '+(r.perd>30?'crit':r.perd>10?'warn':'ok')+'">'+r.perd+'<\/div><div class="kpi-s">\u00a0<\/div><\/div>'
-    +'<div class="kpi" style="flex:1"><div class="kpi-l">Atrasos \u003e'+TAD+'min<\/div>'
-    +'<div class="kpi-v warn">'+r.atd+'<\/div><div class="kpi-s">Adiant.: '+r.adi+'<\/div><\/div>'
+    +'<div class="kpi"><div class="kpi-l">Previstas<\/div><div class="kpi-v-sm neu">'+fN(r.v)+'<\/div><\/div>'
+    +'<div class="kpi"><div class="kpi-l">Realizadas<\/div><div class="kpi-v-sm ok">'+fN(realizadas)+'<\/div><\/div>'
+    +'<div class="kpi"><div class="kpi-l">Perdidas<\/div><div class="kpi-v-sm '+(r.perd>30?'crit':r.perd>10?'warn':'ok')+'">'+r.perd+'<\/div><\/div>'
+    +'<div class="kpi"><div class="kpi-l">Atrasos &gt;'+TAD+' min<\/div><div class="kpi-v-sm warn">'+r.atd+'<\/div><\/div>'
+    +'<div class="kpi"><div class="kpi-l">Adiantamentos &gt;'+TAI+' min<\/div><div class="kpi-v-sm neu">'+r.adi+'<\/div><\/div>'
     +'<\/div>'
     +'<div class="sec">Resumo por Terminal<\/div>'
-    +'<table><thead><tr><th>Terminal<\/th><th>CP\u00a0%<\/th><th>PT\u00a0%<\/th>'
-    +'<th>Previstas<\/th><th>Perdidas<\/th><th>Atrasos<\/th>'
-    +'<th>Margem CP<\/th><th>Margem PT<\/th><\/tr><\/thead><tbody>'+tbl+'<\/tbody><\/table>'
+    +termSummaryTable()
     +'<div class="ftr">QH Opera\u00e7\u00f5es \u00b7 Flash Di\u00e1rio \u00b7 '+D.sem+' '+D.fmt+'<\/div>'
     +'<\/div>';
+}
+
+function termSummaryTable(){
+  var rows=D.terminais_data.filter(function(t){return t.tem_dados;}).map(function(t){
+    var tr=t.total-t.perd;
+    return '<tr>'
+      +'<td><strong>'+t.nome+'<\/strong><\/td>'
+      +'<td><span class="bd '+bcl(t.cp,MCP)+'">'+fP(t.cp)+'<\/span><\/td>'
+      +'<td><span class="bd '+bcl(t.pt,MPT)+'">'+fP(t.pt)+'<\/span><\/td>'
+      +'<td class="r">'+fN(t.total)+'<\/td>'
+      +'<td class="r">'+fN(tr)+'<\/td>'
+      +'<td class="r" style="'+(t.perd>0?'color:#DC2626;font-weight:700':'')+'">'+t.perd+'<\/td>'
+      +'<td class="r">'+t.atd+'<\/td>'
+      +'<td class="r">'+t.adi+'<\/td>'
+      +'<\/tr>';
+  }).join('');
+  return '<table><thead><tr>'
+    +'<th>Terminal<\/th><th>CP\u00a0%<\/th><th>PT\u00a0%<\/th>'
+    +'<th class="r">Previstas<\/th><th class="r">Realizadas<\/th><th class="r">Perdidas<\/th>'
+    +'<th class="r">Atrasos<\/th><th class="r">Adiant.<\/th>'
+    +'<\/tr><\/thead><tbody>'+rows+'<\/tbody><\/table>';
 }
 
 function ptItem(v){
@@ -590,16 +615,21 @@ function ptItem(v){
   var tc=iP?'p':iA?'a':'d';
   var dif=v.dif!=null?Math.round(v.dif):null;
   var lbl=iP?'PERDIDA':iA?'ATRASO '+fM(dif)+' min':'ADIANT. '+fM(dif)+' min';
-  var hr=!iP&&v.hr&&v.hr!=='\u2014'?' \u2192 '+v.hr:'';
   var mot=v.motivo?'<div class="pt-mot">Motivo: '+v.motivo+'<\/div>':'';
+  var horarios='';
+  if(!iP&&v.hp&&v.hr&&v.hr!=='\u2014'){
+    horarios='<div class="pt-hor">Programado: <strong>'+v.hp+'<\/strong> \u2192 Realizado: <strong>'+v.hr+'<\/strong><\/div>';
+  } else if(v.hp){
+    horarios='<div class="pt-hor">Programado: <strong>'+v.hp+'<\/strong><\/div>';
+  }
   return '<div class="pt-item '+cls+'">'
     +'<div class="pt-top">'
     +'<span class="pt-tipo '+tc+'">'+lbl+'<\/span>'
     +'<span class="sep">\u00b7<\/span><span class="pt-id">'+v.l+'<\/span>'
     +'<span class="sep">\u00b7<\/span><span>'+(v.tab||'\u2014')+'<\/span>'
-    +'<span class="sep">\u00b7<\/span><span><strong>'+v.hp+'<\/strong>'+hr+'<\/span>'
     +'<span class="sep">\u00b7<\/span><span>'+sentStr(v.sent)+'<\/span>'
     +'<\/div>'
+    +horarios
     +'<div class="pt-det">Operador: '+(abrev(v.nome)||v.m||'\u2014')+' \u00b7 Carro: '+(v.vei||'\u2014')+'<\/div>'
     +mot+'<\/div>';
 }
@@ -607,56 +637,70 @@ function ptItem(v){
 function buildTerm(t){
   if(!t.tem_dados) return '';
   var cc=pcl(t.cp,MCP),pc=pcl(t.pt,MPT);
+  var t_real=t.total-t.perd;
   var mcN=t.marg_cp,mpN=t.marg_pt;
   var mcCl=mcN>=5?'ok':mcN>=1?'warn':'crit';
   var mpCl=mpN>=5?'ok':mpN>=1?'warn':'crit';
-  var mcTxt=mcN>=0
-    ?'<div class="mbox-n '+mcCl+'">'+mcN+'<\/div><div class="mbox-s">partida'+(mcN!==1?'s':'')+' a perder<\/div>'
-    :'<div class="mbox-n crit">\u2212'+(-mcN)+'<\/div><div class="mbox-s">acima do limite<\/div>';
-  var mpTxt=mpN>=0
-    ?'<div class="mbox-n '+mpCl+'">'+mpN+'<\/div><div class="mbox-s">ofensora'+(mpN!==1?'s':'')+' restante'+(mpN!==1?'s':'')+'<\/div>'
-    :'<div class="mbox-n crit">\u2212'+(-mpN)+'<\/div><div class="mbox-s">acima do limite<\/div>';
+
+  var linhasBadges=t.linhas.map(function(l){
+    var lObj=t.lns_crit.find(function(x){return x.l===l;});
+    var cls=lObj?'lbadge crit':'lbadge';
+    return '<span class="'+cls+'">'+l+'<\/span>';
+  }).join('');
+
   var lnRows=t.lns_crit.map(function(l){
-    return '<tr><td><strong>'+l.l+'<\/strong><\/td>'
+    return '<tr>'
+      +'<td><strong>'+l.l+'<\/strong><\/td>'
       +'<td><span class="bd '+bcl(l.cp,MCP)+'">'+fP(l.cp)+'<\/span><\/td>'
       +'<td><span class="bd '+bcl(l.pt,MPT)+'">'+fP(l.pt)+'<\/span><\/td>'
-      +'<td>'+l.v+'<\/td>'
-      +'<td style="'+(l.perd>0?'color:#DC2626;font-weight:700':'')+'">'+l.perd+'<\/td>'
-      +'<td>'+l.atd+'<\/td><td>'+l.adi+'<\/td><\/tr>';
+      +'<td class="r">'+l.v+'<\/td>'
+      +'<td class="r" style="'+(l.perd>0?'color:#DC2626;font-weight:700':'')+'">'+l.perd+'<\/td>'
+      +'<td class="r">'+l.atd+'<\/td><td class="r">'+l.adi+'<\/td><\/tr>';
   }).join('');
+
   var ofRows=t.of_t.map(function(o){
-    return '<tr><td><strong>'+(abrev(o.nome)||o.m)+'<\/strong><\/td>'
-      +'<td style="font-size:9px;color:#6B7280">'+o.l+' \u00b7 '+o.vei+'<\/td>'
+    return '<tr>'
+      +'<td><strong>'+(abrev(o.nome)||o.m)+'<\/strong><\/td>'
+      +'<td style="font-size:10px;color:#6B7280">'+o.l+' \u00b7 '+o.vei+'<\/td>'
       +'<td><span class="bd '+bcl(o.cp,MCP)+'">'+fP(o.cp)+'<\/span><\/td>'
       +'<td><span class="bd '+bcl(o.pt,MPT)+'">'+fP(o.pt)+'<\/span><\/td>'
-      +'<td>'+o.v+'<\/td>'
-      +'<td style="'+(o.perd>0?'color:#DC2626;font-weight:700':'')+'">'+o.perd+'<\/td>'
-      +'<td>'+o.atd+'<\/td><\/tr>';
+      +'<td class="r">'+o.v+'<\/td>'
+      +'<td class="r" style="'+(o.perd>0?'color:#DC2626;font-weight:700':'')+'">'+o.perd+'<\/td>'
+      +'<td class="r">'+o.atd+'<\/td><\/tr>';
   }).join('');
+
   var sem=!t.lns_crit.length&&!t.of_t.length&&!t.vgs_t.length;
+
   return '<div class="tcard">'
     +'<div class="tcard-hdr">'
     +'<div class="tcard-nome">'+t.nome+'<\/div>'
     +'<div class="tkpi"><div class="tkpi-l">CP<\/div><div class="tkpi-v '+cc+'">'+fP(t.cp)+'<\/div><\/div>'
     +'<div class="tkpi"><div class="tkpi-l">PT<\/div><div class="tkpi-v '+pc+'">'+fP(t.pt)+'<\/div><\/div>'
-    +'<div style="font-size:10px;color:rgba(255,255,255,.55);margin-left:auto">'
-    +fN(t.total)+' prev. \u00b7 '+t.perd+' perd. \u00b7 '+t.atd+' atr.<\/div>'
     +'<\/div>'
     +'<div class="tcard-body">'
-    +'<div class="margens">'
-    +'<div class="mbox'+(mcN<0?' danger':'')+'"><div class="mbox-l">Margem CP (meta '+MCP+'%)<\/div>'+mcTxt+'<\/div>'
-    +'<div class="mbox'+(mpN<0?' danger':'')+'"><div class="mbox-l">Margem PT (meta '+MPT+'%)<\/div>'+mpTxt+'<\/div>'
+    +'<div class="tstats">'
+    +'<div class="tstat"><div class="tstat-l">Previstas<\/div><div class="tstat-v neu">'+fN(t.total)+'<\/div><\/div>'
+    +'<div class="tstat"><div class="tstat-l">Realizadas<\/div><div class="tstat-v ok">'+fN(t_real)+'<\/div><\/div>'
+    +'<div class="tstat"><div class="tstat-l">Perdidas<\/div><div class="tstat-v '+(t.perd>0?'crit':'ok')+'">'+t.perd+'<\/div><\/div>'
+    +'<div class="tstat"><div class="tstat-l">Atrasos &gt;'+TAD+'min<\/div><div class="tstat-v '+(t.atd>0?'warn':'ok')+'">'+t.atd+'<\/div><\/div>'
+    +'<div class="tstat"><div class="tstat-l">Adiant. &gt;'+TAI+'min<\/div><div class="tstat-v '+(t.adi>0?'neu':'ok')+'">'+t.adi+'<\/div><\/div>'
     +'<\/div>'
-    +(sem?'<div class="ok-bar">\u2705 Terminal dentro das metas \u2014 sem ocorr\u00eancias relevantes<\/div>':'')
+    +'<div class="tlines">Linhas: '+linhasBadges+'<\/div>'
+    +'<div class="tmargens">'
+    +'<span class="tmarg '+mcCl+'">CP: '+(mcN>=0?'pode perder mais <strong>'+mcN+'<\/strong> partida'+(mcN!==1?'s':''):'<strong style=\\"color:#DC2626\\">excedeu '+(-mcN)+'<\/strong>')+'<\/span>'
+    +'<span class="tmarg-sep">\u00b7<\/span>'
+    +'<span class="tmarg '+mpCl+'">PT: '+(mpN>=0?'pode ter mais <strong>'+mpN+'<\/strong> ofensora'+(mpN!==1?'s':''):'<strong style=\\"color:#DC2626\\">excedeu '+(-mpN)+'<\/strong>')+'<\/span>'
+    +'<\/div>'
+    +(sem?'<div class="ok-bar">Terminal dentro das metas \u2014 sem ocorr\u00eancias relevantes<\/div>':'')
     +(t.lns_crit.length
       ?'<div class="sec">Linhas Cr\u00edticas<\/div>'
       +'<table><thead><tr><th>Linha<\/th><th>CP\u00a0%<\/th><th>PT\u00a0%<\/th>'
-      +'<th>Viagens<\/th><th>Perdidas<\/th><th>Atrasos<\/th><th>Adiant.<\/th><\/tr><\/thead>'
+      +'<th class="r">Viagens<\/th><th class="r">Perdidas<\/th><th class="r">Atrasos<\/th><th class="r">Adiant.<\/th><\/tr><\/thead>'
       +'<tbody>'+lnRows+'<\/tbody><\/table>':'')
     +(t.of_t.length
       ?'<div class="sec">Principais Ofensores<\/div>'
       +'<table><thead><tr><th>Operador<\/th><th>Linha \u00b7 Ve\u00edculo<\/th>'
-      +'<th>CP\u00a0%<\/th><th>PT\u00a0%<\/th><th>Vgs<\/th><th>Perdidas<\/th><th>Atrasos<\/th><\/tr><\/thead>'
+      +'<th>CP\u00a0%<\/th><th>PT\u00a0%<\/th><th class="r">Vgs<\/th><th class="r">Perdidas<\/th><th class="r">Atrasos<\/th><\/tr><\/thead>'
       +'<tbody>'+ofRows+'<\/tbody><\/table>':'')
     +(t.vgs_t.length?'<div class="sec">Partidas Cr\u00edticas<\/div>'+t.vgs_t.map(ptItem).join(''):'')
     +'<\/div><\/div>';
