@@ -1091,7 +1091,8 @@ if PREVIEW:
     print("[PREVIEW] Abrindo no navegador. PDF e envio ignorados.")
     sys.exit(0)
 
-# PDF via Edge headless
+# PDF via Edge headless — gera em temp (sem acento no path) e move depois
+_TEMP_PDF = os.path.join(r"C:\Users\monit\AppData\Local\Temp", f"{NOME}.pdf")
 _edge_candidates = [
     r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
     r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
@@ -1100,16 +1101,23 @@ _edge_candidates += glob.glob(r"C:\Program Files*\Microsoft\Edge\Application\mse
 _browser = next((c for c in _edge_candidates if os.path.exists(c)), None)
 if _browser:
     _url = "file:///" + OUT_HTML.replace("\\", "/").replace(" ", "%20")
-    result = subprocess.run(
+    subprocess.run(
         [_browser, "--headless=new", "--disable-gpu", "--no-sandbox",
-         "--disable-extensions", f"--print-to-pdf={OUT_PDF}",
+         "--disable-extensions", f"--print-to-pdf={_TEMP_PDF}",
          "--print-to-pdf-no-header", _url],
         timeout=60, capture_output=True
     )
-    if os.path.exists(OUT_PDF):
+    import time
+    for _ in range(15):  # aguarda até 15s
+        if os.path.exists(_TEMP_PDF) and os.path.getsize(_TEMP_PDF) > 1000:
+            break
+        time.sleep(1)
+    if os.path.exists(_TEMP_PDF):
+        import shutil
+        shutil.copy2(_TEMP_PDF, OUT_PDF)
         print(f"PDF: {OUT_PDF} ({os.path.getsize(OUT_PDF)//1024} KB)")
     else:
-        print(f"ERRO PDF: {result.stderr.decode(errors='ignore')[:200]}")
+        print("ERRO PDF: Edge não gerou o arquivo. Verifique permissões.")
 else:
     print("Edge não encontrado. PDF não gerado.")
 
