@@ -94,6 +94,26 @@ for ln,v2,p2,atd2,adi2,am2 in cur.fetchall():
                       "cp":round(100.0*(v2-p2)/v2,1) if v2 else 0,
                       "pt":round(100.0*(v2-p2-atd2-adi2)/(v2-p2),1) if (v2-p2) else 0})
 
+# ── 3b. TOTAIS BRUTOS POR LINHA (sem HAVING — para cálculo de terminal) ───────
+# Não usado para exibição; usado exclusivamente para somar nos terminais,
+# garantindo que linhas com 1-2 viagens no dia entrem nos totais do terminal.
+cur.execute(f"""
+SELECT linha,
+  COUNT(*) as v,
+  COUNT(*) FILTER(WHERE iniciorealizado='') as perd,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ATD}) as atd,
+  COUNT(*) FILTER(WHERE iniciorealizado<>'' AND {DIFF_ADI}) as adi
+FROM viagens_qh
+WHERE data='{ONTEM}' AND atividade='Viagem Normal' AND inicioprogramado<>''
+  AND linha NOT IN ({EX})
+GROUP BY linha
+ORDER BY linha
+""")
+_raw: dict = {}
+for ln,v2,p2,atd2,adi2 in cur.fetchall():
+    _raw[ln] = {"v":int(v2 or 0),"perd":int(p2 or 0),
+                "atd":int(atd2 or 0),"adi":int(adi2 or 0)}
+
 # ── 4. IDA vs VOLTA por linha ─────────────────────────────────────────────────
 cur.execute(f"""
 SELECT linha, COALESCE(NULLIF(TRIM(sentido),''),'?') as sent,
@@ -318,13 +338,15 @@ _line_to_term = {ln: t for t, lns in TERMINAIS_PY.items() for ln in lns}
 
 por_terminal = []
 for t_name, t_lines in TERMINAIS_PY.items():
-    linhas_t = [l for l in por_linha if l["l"] in t_lines]
-    if not linhas_t:
+    linhas_t = [l for l in por_linha if l["l"] in t_lines]  # para exibição
+    # totais usando dados brutos (inclui linhas com <3 viagens no dia)
+    raw_t = [_raw[ln] for ln in t_lines if ln in _raw]
+    if not raw_t:
         continue
-    t_tot  = sum(l["v"]    for l in linhas_t)
-    t_perd = sum(l["perd"] for l in linhas_t)
-    t_atd  = sum(l["atd"]  for l in linhas_t)
-    t_adi  = sum(l["adi"]  for l in linhas_t)
+    t_tot  = sum(r["v"]    for r in raw_t)
+    t_perd = sum(r["perd"] for r in raw_t)
+    t_atd  = sum(r["atd"]  for r in raw_t)
+    t_adi  = sum(r["adi"]  for r in raw_t)
     t_real = t_tot - t_perd
     t_cp   = round(100.0 * (t_tot - t_perd) / t_tot,  1) if t_tot  else 0.0
     t_pt   = round(100.0 * (t_real - t_atd - t_adi) / t_real, 1) if t_real else 0.0
